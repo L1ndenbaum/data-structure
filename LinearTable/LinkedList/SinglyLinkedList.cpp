@@ -6,18 +6,18 @@
 using namespace std;
 
 // Pure C
-struct linkedListNode
+struct LinkedListNode
 {
     elemType data;
-    struct linkedListNode* next;
+    struct LinkedListNode* next;
 };
 
 /**
  * 返回分配了内存的单链表头节点
  */
-linkedListNode* initLinkedList()
+LinkedListNode* initLinkedList()
 {
-    linkedListNode* headNode = (linkedListNode*)malloc(sizeof(linkedListNode));
+    LinkedListNode* headNode = (LinkedListNode*)malloc(sizeof(LinkedListNode));
     if (!headNode) {return NULL;}
     headNode -> next = NULL;
     return headNode;
@@ -26,10 +26,10 @@ linkedListNode* initLinkedList()
 /**
  * 求数据节点个数 不含head
  */
-int getLinkedListLength(linkedListNode* head)
+int getLinkedListLength(LinkedListNode* head)
 {
     int len = 0;
-    linkedListNode* p = head -> next;
+    LinkedListNode* p = head -> next;
     while(p)
     {
         p = p->next;
@@ -43,14 +43,14 @@ int getLinkedListLength(linkedListNode* head)
  * 求第index个数据节点地址, 不含head
  * index从0开始, 即 head->index0->index1->...
  */
-linkedListNode* getLinkedListNodeByIndex(linkedListNode* head, int index)
+LinkedListNode* getLinkedListNodeByIndex(LinkedListNode* head, int index)
 {
     if(getLinkedListLength(head) < index)
     {
         return NULL;
     }
     
-    linkedListNode* p = head->next;
+    LinkedListNode* p = head->next;
     while(index--)
     {
         p = p->next;
@@ -62,7 +62,7 @@ linkedListNode* getLinkedListNodeByIndex(linkedListNode* head, int index)
 /**
  * 求节点data字段值为value的所有节点地址
  */
-linkedListNode** getLinkedListNodesByValues(linkedListNode* head, elemType value)
+LinkedListNode** getLinkedListNodesByValues(LinkedListNode* head, elemType value)
 {
     if(!head)
     {
@@ -70,14 +70,14 @@ linkedListNode** getLinkedListNodesByValues(linkedListNode* head, elemType value
     }
     int linkedListLength = getLinkedListLength(head);
 
-    linkedListNode** allFoundAddrs = (linkedListNode**)malloc(linkedListLength*sizeof(linkedListNode*));
+    LinkedListNode** allFoundAddrs = (LinkedListNode**)malloc(linkedListLength*sizeof(LinkedListNode*));
     if(!allFoundAddrs)
     {
         return NULL;
     }
     int addrIndex = 0;
 
-    linkedListNode* p = head->next;
+    LinkedListNode* p = head->next;
     while(p)
     {
         if(p->data == value)
@@ -94,19 +94,19 @@ linkedListNode** getLinkedListNodesByValues(linkedListNode* head, elemType value
  * 在index位置节点插入一个值为value的节点并将原节点置为index+1位置, index从0开始, 不含head
  * 返回插入的节点的地址
  */
-linkedListNode* insertLinkedListNodeByIndex(linkedListNode* head, int index, elemType value)
+LinkedListNode* insertLinkedListNodeByIndex(LinkedListNode* head, int index, elemType value)
 {
     if(getLinkedListLength(head) < index)
     {
         return NULL;
     }
     
-    linkedListNode* p = head;
+    LinkedListNode* p = head;
     while(index--)
     {
         p = p->next;
     } // 定位到插入位置的前一个节点
-    linkedListNode* insertedNode = (linkedListNode*)malloc(sizeof(linkedListNode));
+    LinkedListNode* insertedNode = (LinkedListNode*)malloc(sizeof(LinkedListNode));
     *insertedNode = {.data=value, .next=p->next};
     p->next = insertedNode;
 
@@ -116,19 +116,19 @@ linkedListNode* insertLinkedListNodeByIndex(linkedListNode* head, int index, ele
 /**
  * 删除第index个数据节点, index从0开始, 不含head
  */
-void deleteLinkedListNodeByIndex(linkedListNode* head, int index)
+void deleteLinkedListNodeByIndex(LinkedListNode* head, int index)
 {
     if(getLinkedListLength(head) <= index)
     {
         return;
     }
 
-   linkedListNode* p = head;
+   LinkedListNode* p = head;
    while (index--)
    {
         p = p->next;
    } // 定位到待删除节点的前一个
-   linkedListNode* deletePtr = p->next;
+   LinkedListNode* deletePtr = p->next;
    p->next = p->next->next;
    free(deletePtr);
 
@@ -138,16 +138,16 @@ void deleteLinkedListNodeByIndex(linkedListNode* head, int index)
 /**
  * 删除所有值为value的节点
  */
-void deleteLinkedListNodesByValue(linkedListNode* head, elemType value)
+void deleteLinkedListNodesByValue(LinkedListNode* head, elemType value)
 {
-   linkedListNode* prevNode = head;
-   linkedListNode* currentNode = head->next;
+   LinkedListNode* prevNode = head;
+   LinkedListNode* currentNode = head->next;
    while(currentNode)
    {
         if(currentNode->data == value)
         {
             prevNode -> next = currentNode->next;
-            linkedListNode* deletePtr = currentNode;
+            LinkedListNode* deletePtr = currentNode;
             currentNode = currentNode->next;
             free(deletePtr);
             continue;
@@ -163,16 +163,16 @@ void deleteLinkedListNodesByValue(linkedListNode* head, elemType value)
  * 使用reversed=true以使用头插, 单链表数据顺序和数组相反
  * 返回建立的单链表的头节点地址
  */
-linkedListNode* buildLinkedListByArray(elemType* arr, int arrLength, bool reversed=false)
+LinkedListNode* buildLinkedListByArray(elemType* arr, int arrLength, bool reversed=false)
 {
-    linkedListNode* head = initLinkedList();
+    LinkedListNode* head = initLinkedList();
     switch (reversed)
     {
         case true:
         {
             for (int i = 0; i < arrLength; i++)
             {
-                linkedListNode* newNode = (linkedListNode*)malloc(sizeof(linkedListNode));
+                LinkedListNode* newNode = (LinkedListNode*)malloc(sizeof(LinkedListNode));
                 *newNode = {.data=arr[i], .next=NULL};
                 newNode->next = head->next;
                 head->next = newNode;
@@ -182,10 +182,10 @@ linkedListNode* buildLinkedListByArray(elemType* arr, int arrLength, bool revers
 
         default:
         {
-            linkedListNode* currentNode = head;
+            LinkedListNode* currentNode = head;
             for (int i = 0; i < arrLength; i++)
             {
-                linkedListNode* newNode = (linkedListNode*)malloc(sizeof(linkedListNode));
+                LinkedListNode* newNode = (LinkedListNode*)malloc(sizeof(LinkedListNode));
                 *newNode = {.data=arr[i], .next=NULL};
                 currentNode->next = newNode;
                 currentNode = newNode;
@@ -200,22 +200,24 @@ linkedListNode* buildLinkedListByArray(elemType* arr, int arrLength, bool revers
 /**
  * 打印单链表每个节点的地址和值, 头节点单独打印
  */
-void printLinkedList(linkedListNode* head)
+void printLinkedList(LinkedListNode* head)
 {
+    printf("\n-------------------------------------\n");
     printf("Head Node | Addr: %p | Value: None\n", head);
-    linkedListNode* p = head->next;
+    LinkedListNode* p = head->next;
     while(p)
     {
         printf("Data Node | Addr: %p | Value: %d\n", p, p->data);
         p = p->next;
     }
+    printf("-------------------------------------\n");
 }
 
 int main()
 {
     elemType testArray[6] = {10, 28, 32, 64, 199, 65535};
-    linkedListNode* reversedArrayLinkedListHead = buildLinkedListByArray(testArray, getArrayLength(testArray), true);
-    linkedListNode* ArrayLikeLinkedListHead = buildLinkedListByArray(testArray, getArrayLength(testArray));
+    LinkedListNode* reversedArrayLinkedListHead = buildLinkedListByArray(testArray, getArrayLength(testArray), true);
+    LinkedListNode* ArrayLikeLinkedListHead = buildLinkedListByArray(testArray, getArrayLength(testArray));
     printLinkedList(reversedArrayLinkedListHead);
     insertLinkedListNodeByIndex(reversedArrayLinkedListHead, 6, __INT_MAX__);
     printLinkedList(reversedArrayLinkedListHead);
@@ -245,7 +247,7 @@ int main()
 
     insertLinkedListNodeByIndex(ArrayLikeLinkedListHead, 2, __INT_MAX__);
     insertLinkedListNodeByIndex(ArrayLikeLinkedListHead, 3, __INT_MAX__);
-    linkedListNode** addrs = getLinkedListNodesByValues(ArrayLikeLinkedListHead, __INT_MAX__);
+    LinkedListNode** addrs = getLinkedListNodesByValues(ArrayLikeLinkedListHead, __INT_MAX__);
     printf("All Addrs: %p\t%p", addrs[0], addrs[1]);
 
     return 0;
