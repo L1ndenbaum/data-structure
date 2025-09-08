@@ -39,7 +39,17 @@ bool isBracketMatch(const char* bracketSequence)
     return stack.empty(); // 如果栈为空，则所有括号都匹配
 }
 
-// 将中缀表达式转换为后缀表达式
+/**
+ * 将中缀表达式转换为后缀表达式
+ * 
+ * 对于其中的规则, 可以这样理解:
+ * 在后缀表达式中, 运算顺序按照从左到右的顺序依次取操作数和操作符进行,
+ * 那么自然要把优先级高的运算放在前面,
+ * 所以, 遇到带括号的子算式的时候, 左括号先入栈, 遇到右括号的时候一次性弹出去, 表示"这部分运算要先做"
+ * 在一个运算符比栈顶优先级高的时候, 将它入栈, 是因为栈是先进后出的, 它成为了新的栈顶后, 会先出, 从而先参与运算, 表示它的优先级更高
+ * 在一个运算符比栈顶优先级低或等于栈顶的时候, 出栈直到栈顶运算符优先级更高, 
+ * 是因为要先做优先级高的运算(这体现在栈顶的运算符优先级更高)或更靠前的运算(这体现在栈顶的运算符优先级于它相同)
+ */
 const char* convertInfixExpressionToPostfix(const char* infixExpression)
 {
     std::stack<char> stack;
@@ -98,6 +108,7 @@ const char* convertInfixExpressionToPostfix(const char* infixExpression)
 
 /**
  * 用后缀表达式求值, 这里的操作数应为具体的个位整数
+ * 注意, 操作数栈中, 先弹出去的是右操作数
  * 这只是一个表达式求值的简化实现
  * 可以考虑使用一个 vector<Element> 实现序列
  */
