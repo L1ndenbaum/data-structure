@@ -23,7 +23,7 @@ vector<vector<int>> getPrimMST(vector<vector<int>>& adjMatrix)
     int numVertices = adjMatrix.size();
     vector<vector<int>> mstEdgeList;
     vector<int> parents(numVertices);
-    vector<int> minExpandCost(numVertices, INT_MAX);
+    vector<int> minExpandCost(numVertices, __INT_MAX__);
     vector<bool> isInMST(numVertices, false);
     
     /**
@@ -33,7 +33,7 @@ vector<vector<int>> getPrimMST(vector<vector<int>>& adjMatrix)
     minExpandCost[0] = 0;
     auto getMinminExpandCost = [&]() -> int // 寻找一个从U到V-U中最小的边(u,v), 返回顶点索引vertexV
     {
-        int min = INT_MAX;
+        int min = __INT_MAX__;
         int minIdx;
         for (int vertexV = 0; vertexV < isInMST.size(); vertexV++)
         {

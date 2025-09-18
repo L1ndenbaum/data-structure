@@ -1,7 +1,7 @@
 #include<vector>
 #include<queue>
 #include<iostream>
-#define INF INT_MAX
+#define INF __INT_MAX__
 using namespace std;
 
 

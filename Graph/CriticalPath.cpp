@@ -5,10 +5,12 @@
 using namespace std;
 
 /**
- * 求关键路径, 先拓扑排序.
- * 这里的图中的边是带权的， 代表做一件事需要多长时间
- * 一件事能开始, 必须要所有依赖它的事做完
- * 这里假设所有图都是有向无环图, 在拓扑排序中不需要做错误检查, 并且只有一个源点和汇点
+ * 在一个有向无环图中, 用顶点表示时间, 用边表示活动, 边上的权值表示一个活动需要多长时间
+ * 求出这个图中的关键路径, 关键路径指的是从源点到汇点的所有路径中最长的那一个
+ * 关键路径的长度就是完成整个工程的最短时间
+ * 关键路径上的边(活动)为关键活动, 关键活动如果延期, 就会导致工程的延期
+ * 关键活动如果提前完成, 不一定能加快工期
+ * 这里假设所有输入的图都是有向无环图, 在拓扑排序中不需要做错误检查, 并且只有一个源点和汇点
  */
 
 void topologicalSortUtil(
@@ -59,7 +61,7 @@ vector<int> sortGraphTopological(vector<vector<int>> adjList[], int numVertices)
     return sortResult;
 }
 
-vector<int> computeEarliestStartTime(vector<int>& topologicalSortResult, vector<vector<int>> adjList[], int& numVertices)
+vector<int> computeEventEarliestStartTime(vector<int>& topologicalSortResult, vector<vector<int>> adjList[], int& numVertices)
 {
     // 由于做一件事之前, 要做完它的所有依赖, 所以一件事的最早开始时间取决于最大的 完成依赖的时间+依赖的最早开始时间
     vector<int> earliestStartTime(numVertices, 0);
@@ -79,15 +81,16 @@ vector<int> computeEarliestStartTime(vector<int>& topologicalSortResult, vector<
     return earliestStartTime;
 }
 
-vector<int> computeLatestStartTime(
+vector<int> computeEventLatestStartTime(
     vector<int>& topologicalSortResult, 
     vector<vector<int>>& adjMatrix,
     int& finalVertexEarliestStartTime,
-    int& numVertices)
+    int& numVertices
+)
 {
     // 在保证后面的时间在其最迟发生时间之前能够发生时, 一件事最迟必须发生的时间
-    vector<int> latestStartTime(numVertices, __INT_MAX__);
-    latestStartTime[topologicalSortResult[numVertices-1]] = finalVertexEarliestStartTime;
+    vector<int> eventLatestStartTime(numVertices, __INT_MAX__);
+    eventLatestStartTime[topologicalSortResult[numVertices-1]] = finalVertexEarliestStartTime;
     for (int i = numVertices-1; i >= 0; i--)
     {
         int& currentVertex = topologicalSortResult[i];
@@ -95,22 +98,72 @@ vector<int> computeLatestStartTime(
         {
             if(adjMatrix[src][currentVertex] != __INT_MAX__)
             {
-                latestStartTime[src] = min(
-                    latestStartTime[currentVertex]-adjMatrix[src][currentVertex],
-                    latestStartTime[src]
+                eventLatestStartTime[src] = min(
+                    eventLatestStartTime[currentVertex]-adjMatrix[src][currentVertex],
+                    eventLatestStartTime[src]
                 );
             }
         }
     }
     
-    return latestStartTime;
+    return eventLatestStartTime;
+}
+
+vector<vector<int>> computeActivityEarliestStartTime(
+    vector<int>& eventEarliestStartTime, 
+    vector<vector<int>> adjList[],
+    int& numVertices
+)
+{
+    // 一个活动的最早发生时间就是这个活动的起点所代表的事件的最早发生时间
+    vector<vector<int>> activityEarliestStartTime; // {{srcEvent, dstEvent, earliestStartTime}}
+    for (int i = 0; i < numVertices; i++)
+    {
+        for (vector<int>& activity : adjList[i])
+        {
+            int srcEvent = i, dstEvent = activity[0];
+            activityEarliestStartTime.push_back(
+                {
+                    srcEvent, dstEvent, 
+                    eventEarliestStartTime[srcEvent]
+                }
+            );
+        }   
+    }
+    
+    return activityEarliestStartTime;
+}
+
+vector<vector<int>> computeActivityLatestStartTime(
+    vector<int>& eventLatestStartTime, 
+    vector<vector<int>> adjList[],
+    int& numVertices
+)
+{
+    // 一个活动的最晚发生时间指一个活动的终点所代表的事件的最晚发生时间与该活动的时间差
+    vector<vector<int>> activityLatestStartTime; // {{srcEvent, dstEvent, earliestStartTime}}
+    for (int i = 0; i < numVertices; i++)
+    {
+        for (vector<int>& activity : adjList[i])
+        {
+            int srcEvent = i, dstEvent = activity[0], activityTime = activity[1];
+            activityLatestStartTime.push_back(
+                {
+                    srcEvent, dstEvent, 
+                    eventLatestStartTime[dstEvent]-activityTime
+                }
+            );
+        }   
+    }
+    
+    return activityLatestStartTime;
 }
 
 /**
- * 找到所有关键点
+ * 找到所有关键活动
  * 中途需要拓扑排序, 会将edgeList转换为adjList, 直接传入引用
  */
-vector<bool> findCriticalVertices(
+vector<pair<int, int>> findCriticalActivities(
     vector<vector<int>>& edgeList,
     vector<vector<int>> adjList[],
     int& srcVertex,
@@ -130,60 +183,74 @@ vector<bool> findCriticalVertices(
 
     convertEdgeList2AdjListAndAdjMatrix();
     vector<int> topologicalSortResult = sortGraphTopological(adjList, numVertices);
-    vector<int> earliestStartTime = computeEarliestStartTime(topologicalSortResult, adjList, numVertices);
-    vector<int> latestStartTime = computeLatestStartTime(
+    vector<int> eventEarliestStartTime = computeEventEarliestStartTime(
+        topologicalSortResult, 
+        adjList, 
+        numVertices
+    );
+    vector<int> eventLatestStartTime = computeEventLatestStartTime(
         topologicalSortResult, 
         adjMatrix, 
-        earliestStartTime[numVertices-1],
+        eventEarliestStartTime[numVertices-1],
+        numVertices
+    );
+    vector<vector<int>> activityEarliestStartTime = computeActivityEarliestStartTime(
+        eventEarliestStartTime,
+        adjList,
+        numVertices
+    );
+    vector<vector<int>> activityLatestStartTime = computeActivityLatestStartTime(
+        eventLatestStartTime,
+        adjList,
         numVertices
     );
     srcVertex = topologicalSortResult[0];
     finalVertex = topologicalSortResult[numVertices-1];
 
-    vector<bool> isCriticalVertex(numVertices, false); // 所有关键节点, 值为True表示为关键节点
-    for (int i = 0; i < numVertices; i++)
+    vector<pair<int, int>> criticalActivities; // 所有关键活动的起始事件和结束事件
+    for (int i=0; i<activityEarliestStartTime.size(); i++)
     {
-        if(!(latestStartTime[i] - earliestStartTime[i]))
+        vector<int> activityTuple1 = activityEarliestStartTime[i];
+        vector<int> activityTuple2 = activityLatestStartTime[i];
+        int srcEvent = activityTuple1[0],
+            dstEvent = activityTuple1[1],
+            _activityEarliestStartTime = activityTuple1[2],
+            _activityLatestStartTime = activityTuple2[2];
+        if(!(_activityLatestStartTime - _activityEarliestStartTime))
         {
-            isCriticalVertex[i] = true;
+            criticalActivities.push_back({srcEvent, dstEvent});
         }
     }
     
-    return isCriticalVertex;
+    return criticalActivities;
 }
 
 void findCriticalPathDFS(
     vector<vector<int>> adjList[],
-    vector<bool> isCriticalVertex,
+    vector<vector<int>> criticalActivityTable, // criticalActivityTable[i][j]=True表示从i到j的活动为关键活动
     vector<vector<int>>& allCriticalPaths,
     vector<int>& currentPath,
-    int& maxSumWeight,
-    int currentSumWeight,
     int currentVertex,
     int& finalVertexIdx
 )
 {
-    currentPath.push_back(currentVertex);
     if(currentVertex == finalVertexIdx)
     {
-        if(currentSumWeight >= maxSumWeight)
-        {
-            maxSumWeight = currentSumWeight;
-            allCriticalPaths.push_back(currentPath);
-        }
+        currentPath.push_back(finalVertexIdx);
+        allCriticalPaths.push_back(currentPath);
+        currentPath.pop_back();
         return;
     }
     for (vector<int>& neighbor : adjList[currentVertex])
     {
-        if(isCriticalVertex[neighbor[0]])
+        if(criticalActivityTable[currentVertex][neighbor[0]])
         {
+            currentPath.push_back(currentVertex);
             findCriticalPathDFS(
                 adjList,
-                isCriticalVertex,
+                criticalActivityTable,
                 allCriticalPaths,
                 currentPath,
-                maxSumWeight,
-                currentSumWeight + neighbor[1],
                 neighbor[0],
                 finalVertexIdx
             );
@@ -206,18 +273,41 @@ vector<vector<int>> findCriticalPaths(
     vector<int> currentPath;
     vector<vector<int>> allCriticalPaths;
     int srcVertex = -1, finalVertex = -1;
-    vector<bool> isCriticalVertex = findCriticalVertices(
-        edgeList, adjList, srcVertex,
-        finalVertex, numVertices
+    vector<pair<int, int>> criticalActivities = findCriticalActivities(
+        edgeList,
+        adjList,
+        srcVertex, finalVertex, numVertices
     );
-
-    int maxSumWeight = -1;
+    vector<vector<int>> criticalActivityTable(numVertices, vector<int>(numVertices, 0));
+    for (pair<int, int>& criticalActivity : criticalActivities)
+    {
+        int srcEvent = criticalActivity.first, dstEvent = criticalActivity.second;
+        criticalActivityTable[srcEvent][dstEvent] = true;
+    }
+    
     findCriticalPathDFS(
-        adjList, isCriticalVertex, allCriticalPaths, 
-        currentPath, maxSumWeight, 0, srcVertex, finalVertex
+        adjList,
+        criticalActivityTable,
+        allCriticalPaths,
+        currentPath,
+        srcVertex,
+        finalVertex
     );
 
     return allCriticalPaths;
+}
+
+void printAllCriticalPaths(vector<vector<int>>& allCriticalPaths)
+{
+    cout << "----- All Critical Path -----" << endl;
+    for (vector<int>& criticalPath : allCriticalPaths)
+    {
+        for (int& criticalPoint : criticalPath)
+        {
+            cout << criticalPoint << ' ';
+        }
+        cout << endl;
+    }
 }
 
 int main()
@@ -228,14 +318,15 @@ int main()
     };
 
     vector<vector<int>> allCriticalPaths = findCriticalPaths(edgeList, 6);
-    for (vector<int>& criticalPath : allCriticalPaths)
-    {
-        for (int& criticalPoint : criticalPath)
-        {
-            cout << criticalPoint << ' ';
-        }
-        cout << endl;
-    }
+    printAllCriticalPaths(allCriticalPaths);
+
+    edgeList = {
+        {0, 1, 3}, {0, 2, 8}, {2, 1, 4},
+        {1, 3, 9}, {1, 4, 6}, {2, 4, 10},
+        {3, 5, 6}, {4, 5, 9}
+    };
+    allCriticalPaths = findCriticalPaths(edgeList, 6);
+    printAllCriticalPaths(allCriticalPaths);
     
     return 0;
 }
