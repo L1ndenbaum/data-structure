@@ -3,6 +3,8 @@
 
 /**
  * 冒泡排序 升序排
+ * 时间复杂度 O(N^2)
+ * 空间复杂度 O(1)
  */
 void bubbleSort(int* arr, int numElements)
 {
