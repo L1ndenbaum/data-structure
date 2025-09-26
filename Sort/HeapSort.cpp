@@ -47,6 +47,80 @@ void heapSort(int* arr, int numElements)
     return;
 }
 
+template<typename T>
+struct PriorityQueue
+{
+    // 大顶堆
+    T* storage;
+    int storagePtr = -1;
+    PriorityQueue(int maxSize)
+    {
+        this->storage = new T[maxSize];
+    }
+    ~PriorityQueue()
+    {
+        delete[] this->storage;
+    }
+
+    inline int size()
+    {
+        return storagePtr;
+    }
+
+    inline bool empty()
+    {
+        return storagePtr == -1;
+    }
+
+    inline T top()
+    {
+        return storage[0];
+    }
+
+    void push(T x)
+    {
+        int idx = ++storagePtr;
+        storage[idx] = x;
+
+        // 上滤
+        while (idx > 0)
+        {
+            int parent = (idx-1) / 2;
+            if (storage[parent] >= storage[idx]) { break; }
+            std::swap(storage[parent], storage[idx]);
+            idx = parent;
+        }
+    }
+
+    void pop()
+    {
+        if (storagePtr < 0) return;
+        std::swap(storage[0], storage[storagePtr]);
+        storagePtr--;
+
+        // 下滤
+        int idx = 0;
+        while (true)
+        {
+            int leftChildIdx = 2*idx + 1;
+            int rightChildIdx = 2*idx + 2;
+            int largest = idx;
+
+            if (leftChildIdx <= storagePtr && storage[leftChildIdx] > storage[largest])
+            {
+                largest = leftChildIdx;
+            }
+            if (rightChildIdx <= storagePtr && storage[rightChildIdx] > storage[largest])
+            {
+                largest = rightChildIdx;
+            }
+            if (largest == idx) { break; }
+            std::swap(storage[idx], storage[largest]);
+            idx = largest;
+        }
+    }
+};
+
 int main()
 {
     int arr[7] = { 9, 4, 3, 8, 10, 2, 5 };
@@ -58,4 +132,18 @@ int main()
     {
         std::cout << arr[i]<< ' ';
     }
+    std::cout<< std::endl;
+
+    PriorityQueue<int> pq(10);
+    for (int i = 0; i < 9; i++)
+    {
+        pq.push(i);
+    }
+    for (int i = 0; i < 9; i++)
+    {
+        std::cout << pq.top() << ' ';
+        pq.pop();
+    }
+    
+    return 0;
 }
