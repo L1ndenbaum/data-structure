@@ -15,7 +15,7 @@ int* countSort(int* arr, int numElems)
     {
         maxValue = std::max(arr[i], maxValue);
     }
-    int* count = new int[maxValue+1];
+    int* count = new int[maxValue+1]{};
 
     for (int i = 0; i < numElems; i++) // 统计每个数字出现了多少次
     {
