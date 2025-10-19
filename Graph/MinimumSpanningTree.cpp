@@ -90,7 +90,7 @@ vector<vector<int>> getPrimMST(int numVertices, vector<vector<int>>& edgeList)
     }
 
     priority_queue<
-        pair<int, int>, 
+        pair<int, pair<int, int>>, 
         vector<pair<int, pair<int,int>>>, 
         greater<pair<int, pair<int,int>>>
     > pq;
